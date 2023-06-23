@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken')
 const People = require('../models/peopleModel')
 
 const verifyJWT = async (req, res, next) => {
-    console.log(req.cookies)
     const { jwt: jwtToken } = req.cookies
     // const authHeader = req.headers.authorization || req.headers.Authorization
     // const jwtToken = authHeader.split(' ')[1]

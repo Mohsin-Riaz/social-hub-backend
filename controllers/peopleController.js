@@ -1,6 +1,7 @@
 const People = require('../models/peopleModel')
 const bcrypt = require('bcrypt')
 const crypto = require('crypto')
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const getPeople = async (req, res) => {
@@ -11,45 +12,37 @@ const getPeople = async (req, res) => {
             .status(404)
             .json({ success: false, message: `No people found` })
 
-    return res.status(201).json({ success: true, message: personFound })
+    return res.status(201).json({ success: true, data: personFound })
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const getPeopleById = async (req, res) => {
-    const { peopleId } = req.params
+    const { peopleId } = req.user || req.params
 
     if (!peopleId)
         return res.status(400).json({ success: false, message: `Id required` })
 
     const personFound = await People.findOne({ peopleId: peopleId })
+        .select('-password')
         .lean()
         .exec()
 
     if (!personFound)
         return res
             .status(400)
-            .json({ success: false, message: `No product with ID found` })
+            .json({ success: false, message: `No person with ID found` })
 
     return res.status(201).json({
         success: true,
         data: personFound,
     })
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const createPeople = async (req, res, next) => {
-    const { newPeopleData } = req.body
-    // const {
-    //     first_name,
-    //     last_name,
-    //     password,
-    //     email,
-    //     avatar,
-    //     address,
-    //     birthdate,
-    //     issuer,
-    // } = newPeopleData
-
+    const newPeopleData = req.body
     if (!newPeopleData)
         return res
             .status(400)
@@ -57,19 +50,22 @@ const createPeople = async (req, res, next) => {
 
     const duplicate = await People.findOne({ email: newPeopleData.email })
 
-    if (duplicate)
+    if (duplicate) {
         return res
             .status(400)
             .json({ success: false, message: `Email already in use` })
+    }
 
     if (newPeopleData?.password) {
         var hashedPassword = await bcrypt.hash(newPeopleData.password, 10)
     }
 
+    const peopleId = crypto.randomUUID()
     const newPerson = await People.create({
         ...newPeopleData,
-        peopleId: crypto.randomUUID(),
+        peopleId: peopleId,
         password: hashedPassword,
+        avatar: process.env.IMAGE_BACKEND_URL + peopleId,
     })
     const personCreated = await newPerson.save()
 
@@ -82,6 +78,33 @@ const createPeople = async (req, res, next) => {
 
     next()
 }
+
+const createPeopleGoogle = async (req, res, next) => {
+    const newUser = req.body
+    if (!newUser)
+        return res
+            .status(400)
+            .json({ success: false, message: `No new data provided` })
+
+    const duplicate = await People.findOne({ email: newUser.email })
+
+    if (!duplicate) {
+        const peopleId = crypto.randomUUID()
+        const newPerson = await People.create({
+            ...newUser,
+            peopleId: peopleId,
+            avatar: process.env.IMAGE_BACKEND_URL + peopleId,
+        })
+        const personCreated = await newPerson.save()
+
+        if (!personCreated)
+            return res
+                .status(406)
+                .json({ success: false, message: `Person not created` })
+    }
+    next()
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const updatePeople = async (req, res) => {
@@ -126,8 +149,9 @@ const updatePeople = async (req, res) => {
             .status(400)
             .json({ success: false, message: `Person not updated` })
 
-    return res.status(200).json({ success: true, message: personUpdated })
+    return res.status(200).json({ success: true, data: personUpdated })
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const deletePeople = async (req, res) => {
@@ -148,12 +172,68 @@ const deletePeople = async (req, res) => {
 
     return res.status(200).json({ success: true, message: `Person deleted` })
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+const addFriend = async (req, res) => {
+    const { peopleId } = req.params
+    const newFriend = req.body
+
+    if (req.user.peopleId !== peopleId)
+        return res
+            .status(403)
+            .json({ success: false, message: `Unauthorized add` })
+
+    const addedFriend = await People.findOneAndUpdate(
+        { peopleId: peopleId },
+        {
+            $push: { friends: { ...newFriend } },
+        },
+        { returnDocument: 'after' }
+    )
+
+    if (!addedFriend)
+        return res
+            .status(400)
+            .json({ success: false, message: `friend not added` })
+
+    return res
+        .status(201)
+        .json({ success: true, message: `friend added`, data: newFriend })
+}
+
+const removeFriend = async (req, res) => {
+    const { peopleId } = req.params
+    const { friendId } = req.body
+
+    if (req.user.peopleId !== peopleId)
+        return res
+            .status(403)
+            .json({ success: false, message: `Unauthorized remove` })
+
+    const removedFriend = await People.findOneAndUpdate(
+        { peopleId: peopleId },
+        {
+            $pull: { friends: { peopleId: friendId } },
+        },
+        { returnDocument: 'after' }
+    )
+
+    if (!removedFriend)
+        return res
+            .status(400)
+            .json({ success: false, message: `friend not removed` })
+
+    return res.status(201).json({ success: true, message: `friend removed` })
+}
 
 module.exports = {
     getPeople,
     getPeopleById,
     createPeople,
+    createPeopleGoogle,
     updatePeople,
     deletePeople,
+    addFriend,
+    removeFriend,
 }

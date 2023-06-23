@@ -42,8 +42,49 @@ const login = async (req, res) => {
     return res.status(200).json({
         success: true,
         message: 'Person logged in',
+        data: { peopleId: personFound.peopleId },
         // cookieObject: cookieObject,
     })
+}
+
+const loginGoogle = async (req, res) => {
+    const { email } = req.body
+    console.log(email)
+    if (!email)
+        return res
+            .status(404)
+            .json({ success: false, message: `no email/password provided` })
+
+    const personFound = await People.findOne({ email: email })
+    if (!personFound)
+        return res
+            .status(404)
+            .json({ success: false, message: `person does not exist` })
+
+    const cookieObject = jwt.sign(
+        {
+            peopleId: personFound.peopleId,
+            email: personFound.email,
+        },
+        'secret'
+    )
+    console.log('pre-cookie')
+    // res.clearCookie('jwt')
+    return res.cookie('jwt', cookieObject, {
+        // httpOnly: false, //Access by browser only
+        secure: true, //https
+        sameSite: 'None', //cross-site cookie
+        maxAge: 7 * 24 * 60 * 60 * 1000, //7 days
+        //domain: '.app.localhost:3000',
+    })
+    //  res.redirect(process.env.CLIENT_URL)
+
+    // return res.status(200).json({
+    //     success: true,
+    //     message: 'Person logged in',
+    //     data: { peopleId: personFound.peopleId },
+    //     // cookieObject: cookieObject,
+    // })
 }
 
 const logout = async (req, res) => {
@@ -68,4 +109,4 @@ const refreshJwt = async (req, res) => {
     })
 }
 
-module.exports = { login, logout, refreshJwt }
+module.exports = { login, loginGoogle, logout, refreshJwt }

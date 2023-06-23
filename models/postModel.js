@@ -6,6 +6,15 @@ const postSchema = new mongoose.Schema(
             type: String,
             require: true,
         },
+        avatar: {
+            type: String,
+        },
+        first_name: {
+            type: String,
+        },
+        last_name: {
+            type: String,
+        },
         postId: {
             type: String,
             require: true,

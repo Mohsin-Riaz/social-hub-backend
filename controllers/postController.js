@@ -1,6 +1,8 @@
 const Post = require('../models/postModel')
 const crypto = require('crypto')
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 const getPost = async (req, res) => {
     const postsFound = await Post.find({}).lean().exec()
 
@@ -9,8 +11,9 @@ const getPost = async (req, res) => {
             .status(400)
             .json({ success: false, message: `No posts found` })
 
-    return res.status(200).json({ success: true, message: postsFound })
+    return res.status(200).json({ success: true, data: postsFound })
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const getPostById = async (req, res) => {
@@ -29,7 +32,9 @@ const getPostById = async (req, res) => {
 
     return res.status(200).json({ success: true, message: postFound })
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+
 const getPostByQuery = async (req, res) => {
     const params = req.query
     if (!params)
@@ -46,36 +51,43 @@ const getPostByQuery = async (req, res) => {
             .status(404)
             .json({ success: false, message: `No posts found` })
 
-    return res.status(200).json({ success: true, message: postsFound })
+    return res.status(200).json({ success: true, data: postsFound })
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const createPost = async (req, res) => {
-    const { newPost } = req.body
+    const newPost = req.body
     const { peopleId } = req.user
     if (!newPost)
         return res
             .status(400)
             .json({ success: false, message: `No post info provided` })
-
+    const postId = crypto.randomUUID()
+    if (newPost.postImage) {
+        var postImage = process.env.AWS_S3_URL + postId + '.webp'
+    }
     const newPostObject = await Post.create({
         peopleId: peopleId,
         ...newPost,
-        postId: crypto.randomUUID(),
+        postId: postId,
+        postImage: postImage,
     })
     const postCreated = await newPostObject.save()
-
     if (!postCreated)
         return res
             .status(400)
             .json({ success: false, message: `Post not created` })
 
-    return res.status(200).json({ success: true, message: `Post created` })
+    return res
+        .status(200)
+        .json({ success: true, message: `Post created`, data: newPostObject })
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const updatePost = async (req, res) => {
-    const { updatePostData } = req.body
+    const updatePostData = req.body
     const { postId } = req.params
     const { peopleId } = req.user
 
@@ -94,9 +106,7 @@ const updatePost = async (req, res) => {
 
     const postUpdated = await Post.findOneAndUpdate(
         { postId: postId },
-        {
-            ...updatePostData,
-        },
+        updatePostData,
         { returnDocument: 'after' }
     )
 
@@ -105,45 +115,6 @@ const updatePost = async (req, res) => {
             success: false,
             message: `Post not updated`,
         })
-
-    return res.status(200).json({ success: true, message: `Post updated` })
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-const postComment = async (req, res) => {
-    const { commentText } = req.body
-    const { postId } = req.params
-    const { peopleId } = req.user
-    console.log(postComment, postId, peopleId)
-    if (!postId)
-        return res
-            .status(400)
-            .json({ success: false, message: `No post id provided` })
-    if (!postComment)
-        return res
-            .status(400)
-            .json({ success: false, message: `No post comment provided` })
-
-    const postUpdated = await Post.findOneAndUpdate(
-        { postId: postId },
-        {
-            $push: {
-                postComments: {
-                    commentId: crypto.randomUUID(),
-                    peopleId: peopleId,
-                    commentText: commentText,
-                    dateCreated: new Date(),
-                },
-            },
-        },
-        { returnDocument: 'after' }
-    )
-
-    if (!postUpdated)
-        return res
-            .status(400)
-            .json({ success: false, message: `Post not updated` })
 
     return res.status(200).json({ success: true, message: `Post updated` })
 }
@@ -170,7 +141,81 @@ const deletePost = async (req, res) => {
             .status(400)
             .json({ success: false, message: `Post not deleted` })
 
-    return res.status(200).json({ success: true, message: postDeleted })
+    return res.status(200).json({ success: true, message: 'Post Deleted' })
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+const postComment = async (req, res) => {
+    const comment = req.body
+    const { postId } = req.params
+    const { peopleId } = req.user
+
+    if (comment.peopleId !== peopleId)
+        return res
+            .status(403)
+            .json({ success: false, message: `Unauthorized post` })
+
+    if (!postId)
+        return res
+            .status(400)
+            .json({ success: false, message: `No post id provided` })
+
+    if (!comment)
+        return res
+            .status(400)
+            .json({ success: false, message: `No post comment provided` })
+
+    const postComment = {
+        commentId: crypto.randomUUID(),
+        dateCreated: new Date(),
+        ...comment,
+    }
+
+    const postUpdated = await Post.findOneAndUpdate(
+        { postId: postId },
+        {
+            $push: {
+                postComments: postComment,
+            },
+        },
+        { returnDocument: 'after' }
+    )
+
+    if (!postUpdated)
+        return res.status(400).json({
+            success: false,
+            message: `Post not updated`,
+        })
+
+    return res
+        .status(200)
+        .json({ success: true, message: `Post updated`, data: postComment })
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+const likeComment = async (req, res) => {
+    const { postId } = req.params
+
+    if (!postId)
+        return res
+            .status(400)
+            .json({ success: false, message: `No post id provided` })
+
+    const postLiked = await Post.findOneAndUpdate(
+        { postId: postId },
+        { $inc: { postLikes: 1 } },
+        { returnDocument: 'after' }
+    )
+
+    if (!postLiked)
+        return res.status(400).json({
+            success: false,
+            message: `Post wasn't liked`,
+        })
+
+    return res.status(200).json({ success: true, message: `Post liked` })
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -185,31 +230,35 @@ const deleteComment = async (req, res) => {
             .status(400)
             .json({ success: false, message: `No id provided` })
 
-    const commentDeleted = await Post.findOne({ postId: postId })
-        .then((post) => {
-            const postComments = post.postComments
-            return postComments.filter((comment) => {
-                if (
-                    comment.peopleId !== peopleId ||
-                    comment.commentId !== commentId
-                )
-                    return comment
-            })
-        })
-        .then((updatedPostComments) => {
-            return Post.findOneAndUpdate(
-                { postId: postId },
-                { postComments: updatedPostComments },
-                { returnDocument: 'after' }
-            )
-        })
+    const updatedPostComments = await Post.findOneAndUpdate(
+        { postId: postId },
+        { $pull: { postComments: { commentId: commentId } } },
+        { returnDocument: 'after' }
+    )
 
-    if (!commentDeleted)
+    // const foundPost = await Post.findOne({ postId: postId })
+    // const updatedComments = foundPost.postComments.filter((comment) => {
+    //     if (comment.peopleId !== peopleId || comment.commentId !== commentId)
+    //         return comment
+    // })
+
+    // if (updatedComments.length === foundPost.postComments.length)
+    //     return res
+    //         .status(404)
+    //         .json({ success: false, message: `Comment not found` })
+
+    // const updatedPostComments = await Post.findOneAndUpdate(
+    //     { postId: postId },
+    //     { postComments: updatedComments },
+    //     { returnDocument: 'after' }
+    // )
+
+    if (!updatedPostComments)
         return res
             .status(400)
             .json({ success: false, message: `comment not deleted` })
 
-    return res.status(200).json({ success: true, message: commentDeleted })
+    return res.status(200).json({ success: true, message: `Comment Deleted` })
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -223,4 +272,5 @@ module.exports = {
     getPostById,
     deleteComment,
     postComment,
+    likeComment,
 }
