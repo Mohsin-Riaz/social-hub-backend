@@ -13,6 +13,6 @@ const { createPeopleGoogle } = require('../controllers/peopleController')
 router.route('/login').post(login)
 router.route('/refresh').post(refreshJwt)
 router.route('/logout').post(logout)
-router.route('/google').get(googleOauthHandler)
+router.route('/google').get(googleOauthHandler, createPeopleGoogle, loginGoogle)
 
 module.exports = router

@@ -49,7 +49,7 @@ const login = async (req, res) => {
 
 const loginGoogle = async (req, res) => {
     const { email } = req.body
-    console.log(email)
+
     if (!email)
         return res
             .status(404)
@@ -68,23 +68,15 @@ const loginGoogle = async (req, res) => {
         },
         'secret'
     )
-    console.log('pre-cookie')
-    // res.clearCookie('jwt')
-    return res.cookie('jwt', cookieObject, {
+    res.clearCookie('jwt')
+    res.cookie('jwt', cookieObject, {
         // httpOnly: false, //Access by browser only
         secure: true, //https
         sameSite: 'None', //cross-site cookie
         maxAge: 7 * 24 * 60 * 60 * 1000, //7 days
         //domain: '.app.localhost:3000',
     })
-    //  res.redirect(process.env.CLIENT_URL)
-
-    // return res.status(200).json({
-    //     success: true,
-    //     message: 'Person logged in',
-    //     data: { peopleId: personFound.peopleId },
-    //     // cookieObject: cookieObject,
-    // })
+    res.redirect(process.env.FRONTEND_URL)
 }
 
 const logout = async (req, res) => {

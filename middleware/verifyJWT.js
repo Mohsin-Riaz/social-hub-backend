@@ -18,6 +18,7 @@ const verifyJWT = async (req, res, next) => {
     const user = await People.findOne({ email: verified.email })
     if (!user)
         return res.status(404).json({ success: false, message: `No user` })
+
     req.user = user
     next()
 }

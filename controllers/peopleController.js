@@ -1,7 +1,7 @@
 const People = require('../models/peopleModel')
 const bcrypt = require('bcrypt')
 const crypto = require('crypto')
-
+const jwt = require('jsonwebtoken')
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const getPeople = async (req, res) => {
@@ -81,6 +81,7 @@ const createPeople = async (req, res, next) => {
 
 const createPeopleGoogle = async (req, res, next) => {
     const newUser = req.body
+
     if (!newUser)
         return res
             .status(400)
@@ -108,7 +109,7 @@ const createPeopleGoogle = async (req, res, next) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const updatePeople = async (req, res) => {
-    const { updatePeopleData } = req.body
+    const newData = req.body
     const { peopleId } = req.params
     if (req.user?.peopleId != peopleId)
         return res.status(403).json({ success: false, message: `Unauthorized` })
@@ -124,22 +125,22 @@ const updatePeople = async (req, res) => {
     //     issuer,
     // } = updatePeopleData
 
-    if (!updatePeopleData)
+    if (!newData || req.user)
         return res
             .status(400)
             .json({ success: false, message: `No new data provided` })
 
-    if (updatePeopleData?.password) {
-        var hashedPassword = await bcrypt.hash(updatePeopleData.password, 10)
+    if (newData?.password) {
+        var hashedPassword = await bcrypt.hash(newData.password, 10)
     }
 
     const updatedInfo = new Object({
-        ...updatePeopleData,
+        ...newData,
         password: hashedPassword,
     })
 
     const personUpdated = await People.findOneAndUpdate(
-        { peopleId: peopleId },
+        { peopleId: req.user.peopleId },
         { ...updatedInfo },
         { returnDocument: 'after' }
     )

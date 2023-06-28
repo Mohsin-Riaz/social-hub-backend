@@ -19,6 +19,7 @@ const peopleSchema = new mongoose.Schema(
         },
         avatar: {
             type: String,
+            default: '/database/avatars/avi1.png',
         },
         email: {
             type: String,
