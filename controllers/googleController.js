@@ -1,52 +1,53 @@
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
 // const { getGoogleOAuthTokens, getGoogleUser } = require('./googleHandler')
-const { default: axios } = require('axios')
-const qs = require('querystring')
-const People = require('../models/peopleModel')
-const crypto = require('crypto')
+const { default: axios } = require('axios');
+const qs = require('querystring');
+const People = require('../models/peopleModel');
+const crypto = require('crypto');
+const { log } = require('console');
 
 async function getGoogleOAuthTokens({ code }) {
-    const url = 'https://oauth2.googleapis.com/token'
+    const url = 'https://oauth2.googleapis.com/token';
     const values = {
         code,
         client_id: process.env.GOOGLE_OAUTH_CLIENT_ID,
         client_secret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
         redirect_uri: process.env.BACKEND_URL + '/api/auth/google',
         grant_type: 'authorization_code',
-    }
+    };
 
     try {
         const res = await axios.post(url, qs.stringify(values), {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-        })
-        return res.data
+        });
+        return res.data;
     } catch (error) {
-        console.error(error, error.code)
-        throw new Error(error.message)
+        console.error(error, error.code);
+        throw new Error(error.message);
     }
 }
 
 async function googleOauthHandler(req, res, next) {
-    const { code } = req.query
+    const { code } = req.query;
     try {
-        var { id_token } = await getGoogleOAuthTokens({ code })
+        var { id_token } = await getGoogleOAuthTokens({ code });
 
-        var { email, picture, given_name, family_name } = jwt.decode(id_token)
-
+        var { email, picture, given_name, family_name } = jwt.decode(id_token);
         req.body = {
             email: email,
             first_name: given_name,
             last_name: family_name,
             issuer: 'google',
-        }
+            avatar: picture,
+        };
     } catch (error) {
-        console.log(error, `Failed to authorize Google User`)
-        return res.redirect(process.env.FRONTEND_URL)
+        console.log(error, `Failed to authorize Google User`);
+        return res.redirect(process.env.FRONTEND_URL);
     }
 
-    next()
+    next();
 
     // const duplicate = await People.findOne({ email: email })
     // if (!duplicate?.peopleId) var peopleId = crypto.randomUUID()
@@ -88,4 +89,4 @@ async function googleOauthHandler(req, res, next) {
     // return res.redirect('http://localhost:3000')
 }
 
-module.exports = googleOauthHandler
+module.exports = googleOauthHandler;
