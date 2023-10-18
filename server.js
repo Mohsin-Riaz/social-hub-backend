@@ -14,8 +14,8 @@ app.use(cookieParser());
 app.use(
     cors({
         origin: [
-            'http://mohsinriaz.ca/',
-            'https://mohsin-riaz.github.io/',
+            'http://mohsinriaz.ca',
+            'https://mohsin-riaz.github.io',
             `${process.env.BACKEND_URL}`,
             `${process.env.FRONTEND_URL}`,
             `app.${process.env.FRONTEND_URL}`,
