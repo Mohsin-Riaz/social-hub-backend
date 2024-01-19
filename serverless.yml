@@ -18,10 +18,10 @@ functions:
                   method: any
                   # cors: true
         environment:
-            BACKEND_URL: 'https://yxv8kfxydj.execute-api.us-east-1.amazonaws.com/'
+            BACKEND_URL: 'https://jag7aiqrhe.execute-api.us-east-1.amazonaws.com/'
             FRONTEND_URL: 'https://mohsin-riaz.github.io/social-hub-frontend/'
-            IMAGE_BACKEND_URL: 'https://riaz-social-hub-image-backend.onrender.com/images/'
-            AWS_S3_URL: 'https://mysharpbucket.s3.amazonaws.com/'
+            IMAGE_BACKEND_URL: 'https://omsf140ll9.execute-api.us-east-1.amazonaws.com/images/'
+            AWS_S3_URL: 'https://riaz-projects-bucket.s3.amazonaws.com/'
             PORT: 5000
             DATABASE_URI: 'mongodb+srv://taskApp:zofGr4Dl2NwkfakI@cluster0.nwqh43h.mongodb.net/SocialHub?retryWrites=true&w=majority'
             GOOGLE_OAUTH_CLIENT_ID: '508275044514-nouii0frrt869f1k4ebni3g08r7uohld.apps.googleusercontent.com'

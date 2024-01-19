@@ -40,7 +40,7 @@ async function googleOauthHandler(req, res, next) {
             first_name: given_name,
             last_name: family_name,
             issuer: 'google',
-            avatar: picture,
+            // avatar: picture,
         };
     } catch (error) {
         console.log(error, `Failed to authorize Google User`);

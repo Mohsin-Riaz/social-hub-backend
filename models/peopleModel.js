@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 const peopleSchema = new mongoose.Schema(
     {
@@ -19,7 +19,7 @@ const peopleSchema = new mongoose.Schema(
         },
         avatar: {
             type: String,
-            default: '/database/avatars/avi1.png',
+            default: './database/avatars/avi1.png',
         },
         email: {
             type: String,
@@ -40,6 +40,6 @@ const peopleSchema = new mongoose.Schema(
         },
     },
     { timestamps: true }
-)
+);
 
-module.exports = mongoose.model('People', peopleSchema)
+module.exports = mongoose.model('People', peopleSchema);
