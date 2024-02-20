@@ -15,7 +15,9 @@ app.use(
     cors({
         origin: [
             'http://mohsinriaz.ca',
+            'http://mohsinriaz.ca/',
             'https://mohsin-riaz.github.io',
+            'https://mohsin-riaz.github.io/',
             `${process.env.BACKEND_URL}`,
             `${process.env.FRONTEND_URL}`,
             `app.${process.env.FRONTEND_URL}`,
