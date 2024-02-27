@@ -36,6 +36,7 @@ const login = async (req, res) => {
         secure: true, //https
         sameSite: 'None', //cross-site cookie
         maxAge: 7 * 24 * 60 * 60 * 1000, //7 days
+        path: '/social-hub-frontend/',
         //domain: '.app.localhost:3000',
     });
 
@@ -74,6 +75,7 @@ const loginGoogle = async (req, res) => {
         secure: true, //https
         sameSite: 'None', //cross-site cookie
         maxAge: 7 * 24 * 60 * 60 * 1000, //7 days
+        path: '/social-hub-frontend/',
         //domain: '.app.localhost:3000',
     });
     res.redirect(process.env.FRONTEND_URL);
