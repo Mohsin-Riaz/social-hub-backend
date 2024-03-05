@@ -1,29 +1,31 @@
-const jwt = require('jsonwebtoken')
-const People = require('../models/peopleModel')
+const jwt = require('jsonwebtoken');
+const People = require('../models/peopleModel');
 
 const verifyJWT = async (req, res, next) => {
-    const { jwt: jwtToken } = req.cookies
+    const { jwt: jwtToken } = req.cookies;
     // const authHeader = req.headers.authorization || req.headers.Authorization
     // const jwtToken = authHeader.split(' ')[1]
     // || !authHeader.startsWith('Bearer')
     if (!jwtToken)
         return res
-            .status(404)
-            .json({ success: false, message: `No token provided` })
+            .status(400)
+            .json({ success: false, message: `No token provided` });
 
-    const verified = jwt.verify(jwtToken, 'secret')
+    const verified = jwt.verify(jwtToken, 'secret');
     if (!verified)
-        return res.status(403).json({ success: false, message: `Unauthorized` })
+        return res
+            .status(403)
+            .json({ success: false, message: `Unauthorized` });
 
-    const user = await People.findOne({ email: verified.email })
+    const user = await People.findOne({ email: verified.email });
     if (!user)
-        return res.status(404).json({ success: false, message: `No user` })
+        return res.status(404).json({ success: false, message: `No user` });
 
-    req.user = user
-    next()
-}
+    req.user = user;
+    next();
+};
 
-module.exports = verifyJWT
+module.exports = verifyJWT;
 
 // const jwt = require('jsonwebtoken')
 // require('dotenv').config()
