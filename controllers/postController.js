@@ -1,176 +1,184 @@
-const Post = require('../models/postModel')
-const crypto = require('crypto')
+const Post = require('../models/postModel');
+const crypto = require('crypto');
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const getPost = async (req, res) => {
-    const postsFound = await Post.find({}).lean().exec()
+    const postsFound = await Post.find({}).lean().exec();
+    if (!postsFound)
+        return res
+            .status(404)
+            .json({ success: false, message: `no posts found` });
 
     if (!postsFound?.length)
         return res
-            .status(400)
-            .json({ success: false, message: `No posts found` })
+            .status(204)
+            .json({ success: true, message: `user has no posts` });
 
-    return res.status(200).json({ success: true, data: postsFound })
-}
+    return res.status(200).json({ success: true, data: postsFound });
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const getPostById = async (req, res) => {
-    const { postId } = req.params
+    const { postId } = req.params;
 
     if (!postId)
         return res
             .status(400)
-            .json({ success: false, message: `No post id provided` })
-    const postFound = await Post.findOne({ postId: postId })
+            .json({ success: false, message: `No post id provided` });
+    const postFound = await Post.findOne({ postId: postId });
 
     if (!postFound)
         return res
-            .status(400)
-            .json({ success: false, message: `No post found` })
+            .status(404)
+            .json({ success: false, message: `No post found` });
 
-    return res.status(200).json({ success: true, message: postFound })
-}
+    return res.status(200).json({ success: true, message: postFound });
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const getPostByQuery = async (req, res) => {
-    const params = req.query
+    const params = req.query;
     if (!params)
         return res
             .status(400)
-            .json({ success: false, message: `No people id provided` })
+            .json({ success: false, message: `No people id provided` });
 
     const postsFound = await Post.find({ ...params })
         .lean()
-        .exec()
+        .exec();
 
     if (!postsFound?.length)
         return res
             .status(404)
-            .json({ success: false, message: `No posts found` })
+            .json({ success: false, message: `No post found` });
 
-    return res.status(200).json({ success: true, data: postsFound })
-}
+    return res.status(200).json({ success: true, data: postsFound });
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const createPost = async (req, res) => {
-    const newPost = req.body
-    const { peopleId } = req.user
+    const newPost = req.body;
+    const { peopleId } = req.user;
     if (!newPost)
         return res
             .status(400)
-            .json({ success: false, message: `No post info provided` })
-    const postId = crypto.randomUUID()
+            .json({ success: false, message: `No post info provided` });
+    const postId = crypto.randomUUID();
     if (newPost.postImage) {
-        var postImage = process.env.AWS_S3_URL + postId + '.webp'
+        var postImage = process.env.AWS_S3_URL + postId + '.webp';
     }
     const newPostObject = await Post.create({
         peopleId: peopleId,
         ...newPost,
         postId: postId,
         postImage: postImage,
-    })
-    const postCreated = await newPostObject.save()
+    });
+    const postCreated = await newPostObject.save();
     if (!postCreated)
         return res
             .status(400)
-            .json({ success: false, message: `Post not created` })
+            .json({ success: false, message: `Post not created` });
 
     return res
         .status(200)
-        .json({ success: true, message: `Post created`, data: newPostObject })
-}
+        .json({ success: true, message: `Post created`, data: newPostObject });
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const updatePost = async (req, res) => {
-    const updatePostData = req.body
-    const { postId } = req.params
-    const { peopleId } = req.user
+    const updatePostData = req.body;
+    const { postId } = req.params;
+    const { peopleId } = req.user;
 
     if (!updatePostData)
         return res
             .status(400)
-            .json({ success: false, message: `No post info provided` })
+            .json({ success: false, message: `No post info provided` });
     if (!postId)
         return res
             .status(400)
-            .json({ success: false, message: `No post id provided` })
+            .json({ success: false, message: `No post id provided` });
 
-    const foundPost = await Post.findOne({ postId: postId })
+    const foundPost = await Post.findOne({ postId: postId });
     if (foundPost?.peopleId != peopleId)
-        return res.status(403).json({ success: false, message: `Unauthorized` })
+        return res
+            .status(403)
+            .json({ success: false, message: `Unauthorized` });
 
     const postUpdated = await Post.findOneAndUpdate(
         { postId: postId },
         updatePostData,
         { returnDocument: 'after' }
-    )
+    );
 
     if (!postUpdated)
         return res.status(400).json({
             success: false,
             message: `Post not updated`,
-        })
+        });
 
-    return res.status(200).json({ success: true, message: `Post updated` })
-}
+    return res.status(200).json({ success: true, message: `Post updated` });
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const deletePost = async (req, res) => {
-    const { postId } = req.params
-    const { peopleId } = req.user
+    const { postId } = req.params;
+    const { peopleId } = req.user;
 
     if (!postId)
         return res
             .status(400)
-            .json({ success: false, message: `No id provided` })
+            .json({ success: false, message: `No id provided` });
 
-    const foundPost = await Post.findOne({ postId: postId })
+    const foundPost = await Post.findOne({ postId: postId });
     if (foundPost?.peopleId != peopleId)
-        return res.status(403).json({ success: false, message: `Unauthorized` })
+        return res
+            .status(403)
+            .json({ success: false, message: `Unauthorized` });
 
-    const postDeleted = await Post.findOneAndDelete({ postId: postId })
+    const postDeleted = await Post.findOneAndDelete({ postId: postId });
 
     if (!postDeleted)
         return res
             .status(400)
-            .json({ success: false, message: `Post not deleted` })
+            .json({ success: false, message: `Post not deleted` });
 
-    return res.status(200).json({ success: true, message: 'Post Deleted' })
-}
+    return res.status(200).json({ success: true, message: 'Post Deleted' });
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const postComment = async (req, res) => {
-    const comment = req.body
-    const { postId } = req.params
-    const { peopleId } = req.user
+    const comment = req.body;
+    const { postId } = req.params;
+    const { peopleId } = req.user;
 
     if (comment.peopleId !== peopleId)
         return res
             .status(403)
-            .json({ success: false, message: `Unauthorized post` })
+            .json({ success: false, message: `Unauthorized post` });
 
     if (!postId)
         return res
             .status(400)
-            .json({ success: false, message: `No post id provided` })
+            .json({ success: false, message: `No post id provided` });
 
     if (!comment)
         return res
             .status(400)
-            .json({ success: false, message: `No post comment provided` })
+            .json({ success: false, message: `No post comment provided` });
 
     const postComment = {
         commentId: crypto.randomUUID(),
         dateCreated: new Date(),
         ...comment,
-    }
+    };
 
     const postUpdated = await Post.findOneAndUpdate(
         { postId: postId },
@@ -180,61 +188,61 @@ const postComment = async (req, res) => {
             },
         },
         { returnDocument: 'after' }
-    )
+    );
 
     if (!postUpdated)
         return res.status(400).json({
             success: false,
             message: `Post not updated`,
-        })
+        });
 
     return res
         .status(200)
-        .json({ success: true, message: `Post updated`, data: postComment })
-}
+        .json({ success: true, message: `Post updated`, data: postComment });
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const likeComment = async (req, res) => {
-    const { postId } = req.params
+    const { postId } = req.params;
 
     if (!postId)
         return res
             .status(400)
-            .json({ success: false, message: `No post id provided` })
+            .json({ success: false, message: `No post id provided` });
 
     const postLiked = await Post.findOneAndUpdate(
         { postId: postId },
         { $inc: { postLikes: 1 } },
         { returnDocument: 'after' }
-    )
+    );
 
     if (!postLiked)
         return res.status(400).json({
             success: false,
             message: `Post wasn't liked`,
-        })
+        });
 
-    return res.status(200).json({ success: true, message: `Post liked` })
-}
+    return res.status(200).json({ success: true, message: `Post liked` });
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const deleteComment = async (req, res) => {
-    const { postId } = req.params
-    const { commentId } = req.body
-    const { peopleId } = req.user
+    const { postId } = req.params;
+    const { commentId } = req.body;
+    const { peopleId } = req.user;
 
     if (!postId || !commentId)
         return res
             .status(400)
-            .json({ success: false, message: `No id provided` })
+            .json({ success: false, message: `No id provided` });
 
     const updatedPostComments = await Post.findOneAndUpdate(
         { postId: postId },
         { $pull: { postComments: { commentId: commentId } } },
         { returnDocument: 'after' }
-    )
+    );
 
     // const foundPost = await Post.findOne({ postId: postId })
     // const updatedComments = foundPost.postComments.filter((comment) => {
@@ -256,10 +264,10 @@ const deleteComment = async (req, res) => {
     if (!updatedPostComments)
         return res
             .status(400)
-            .json({ success: false, message: `comment not deleted` })
+            .json({ success: false, message: `comment not deleted` });
 
-    return res.status(200).json({ success: true, message: `Comment Deleted` })
-}
+    return res.status(200).json({ success: true, message: `Comment Deleted` });
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -273,4 +281,4 @@ module.exports = {
     deleteComment,
     postComment,
     likeComment,
-}
+};
