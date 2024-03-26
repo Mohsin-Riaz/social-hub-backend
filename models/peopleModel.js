@@ -19,7 +19,7 @@ const peopleSchema = new mongoose.Schema(
         },
         avatar: {
             type: String,
-            default: './database/avatars/avi1.png',
+            default: 'https://riaz-projects-bucket.s3.amazonaws.com/avi1.webp',
         },
         email: {
             type: String,

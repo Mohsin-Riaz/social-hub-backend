@@ -32,10 +32,10 @@ const login = async (req, res) => {
     );
     res.clearCookie('jwt');
     res.cookie('jwt', cookieObject, {
-        // httpOnly: false, //Access by browser only
+        httpOnly: true, //Access by browser only
         secure: true, //https
-        // sameSite: 'None', //cross-site cookie
-        sameSite: 'Lax', //cross-site cookie
+        sameSite: 'None', //cross-site cookie
+        // sameSite: 'Lax', //cross-site cookie
         maxAge: 7 * 24 * 60 * 60 * 1000, //7 days
         path: '/', //    '/social-hub-frontend'
         //domain: '.app.localhost:3000',
@@ -47,6 +47,7 @@ const login = async (req, res) => {
         data: { peopleId: personFound.peopleId },
         // cookieObject: cookieObject,
     });
+    // return res.redirect(process.env.FRONTEND_URL);
 };
 
 const loginGoogle = async (req, res) => {
@@ -72,17 +73,16 @@ const loginGoogle = async (req, res) => {
     );
     res.clearCookie('jwt');
     res.cookie('jwt', cookieObject, {
-        // httpOnly: false, //Access by browser only
+        httpOnly: false, //Access by browser only
         secure: true, //https
-        // sameSite: 'None', //cross-site cookie
-        sameSite: 'Lax', //cross-site cookie
-
+        sameSite: 'None', //cross-site cookie
+        // sameSite: 'Lax', //cross-site cookie
         maxAge: 7 * 24 * 60 * 60 * 1000, //7 days
         path: '/', //    '/social-hub-frontend'
-
         //domain: '.app.localhost:3000',
     });
-    res.redirect(process.env.FRONTEND_URL);
+
+    return res.redirect(`${process.env.FRONTEND_URL}?jwt=${cookieObject}`);
 };
 
 const logout = async (req, res) => {

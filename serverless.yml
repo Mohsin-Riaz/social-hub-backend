@@ -19,7 +19,8 @@ functions:
                   # cors: true
         environment:
             BACKEND_URL: 'https://jag7aiqrhe.execute-api.us-east-1.amazonaws.com'
-            FRONTEND_URL: 'https://mohsin-riaz.github.io/social-hub-frontend/'
+            # FRONTEND_URL: 'https://mohsin-riaz.github.io/social-hub-frontend/'
+            FRONTEND_URL: 'https://mohsinriaz.ca/social-hub-frontend/'
             IMAGE_BACKEND_URL: 'https://omsf140ll9.execute-api.us-east-1.amazonaws.com/images/'
             AWS_S3_URL: 'https://riaz-projects-bucket.s3.amazonaws.com/'
             PORT: 5000

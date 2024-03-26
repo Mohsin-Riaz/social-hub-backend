@@ -16,5 +16,6 @@ router.route('/logout').post(logout);
 router
     .route('/google')
     .get(googleOauthHandler, createPeopleGoogle, loginGoogle);
+router.route('/logingoogle');
 
 module.exports = router;

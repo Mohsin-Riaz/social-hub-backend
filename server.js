@@ -1,14 +1,12 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-// const chatApp = express();
 
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
 const appPORT = process.env.APPPORT || 5000;
-// const chatAppPORT = process.env.CHATPORT || 5001;
 app.use(express.json());
 app.use(cookieParser());
 app.use(
@@ -16,11 +14,16 @@ app.use(
         origin: [
             'http://mohsinriaz.ca',
             'http://mohsinriaz.ca/',
+            'https://mohsinriaz.ca/',
+            'https://mohsinriaz.ca',
             'https://mohsin-riaz.github.io',
             'https://mohsin-riaz.github.io/',
+            'https://mohsin-riaz.github.io/social-hub-frontend/',
+            'https://mohsin-riaz.github.io/social-hub-frontend',
             `${process.env.BACKEND_URL}`,
             `${process.env.FRONTEND_URL}`,
             `app.${process.env.FRONTEND_URL}`,
+            // 'http://localhost:3000',
         ],
         allowCredentials: true,
         credentials: true,
@@ -59,10 +62,6 @@ mongoose.connection.once('open', () => {
     app.listen(appPORT, () => {
         console.log(`Server: App listening on port ${appPORT}`);
     });
-
-    // chatApp.listen(chatAppPORT, () => {
-    //     console.log(`Server: Chat listening on port ${chatAppPORT}`);
-    // });
 });
 
 mongoose.connection.on('error', (err) => {

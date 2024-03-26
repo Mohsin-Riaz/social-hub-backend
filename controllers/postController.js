@@ -46,14 +46,11 @@ const getPostByQuery = async (req, res) => {
             .status(400)
             .json({ success: false, message: `No people id provided` });
 
-    const postsFound = await Post.find({ ...params })
-        .lean()
-        .exec();
-
+    const postsFound = await Post.find(params).lean().exec();
     if (!postsFound?.length)
         return res
-            .status(404)
-            .json({ success: false, message: `No post found` });
+            .status(204)
+            .json({ success: true, message: `No posts found` });
 
     return res.status(200).json({ success: true, data: postsFound });
 };

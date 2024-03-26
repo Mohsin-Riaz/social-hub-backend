@@ -3,29 +3,46 @@ const People = require('../models/peopleModel');
 
 const verifyJWT = async (req, res, next) => {
     const { jwt: jwtToken } = req.cookies;
-    // const authHeader = req.headers.authorization || req.headers.Authorization
-    // const jwtToken = authHeader.split(' ')[1]
-    // || !authHeader.startsWith('Bearer')
-    if (!jwtToken)
+    const { googleJWT } = req.query;
+
+    if (!jwtToken && !googleJWT?.length)
         return res
             .status(400)
             .json({ success: false, message: `No token provided` });
 
-    const verified = jwt.verify(jwtToken, 'secret');
-    if (!verified)
-        return res
-            .status(403)
-            .json({ success: false, message: `Unauthorized` });
+    if (jwtToken) {
+        const verifiedCookie = jwt.verify(jwtToken, 'secret');
+        if (!verifiedCookie)
+            return res
+                .status(403)
+                .json({ success: false, message: `Unauthorized` });
+        var userFound = await People.findOne({ email: verifiedCookie.email });
+    } else if (googleJWT.length) {
+        try {
+            const verifiedGoogle = jwt.verify(googleJWT, 'secret');
+            if (!verifiedGoogle)
+                return res
+                    .status(403)
+                    .json({ success: false, message: `Unauthorized` });
+            var userFound = await People.findOne({
+                email: verifiedGoogle.email,
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
-    const user = await People.findOne({ email: verified.email });
-    if (!user)
+    if (!userFound)
         return res.status(404).json({ success: false, message: `No user` });
 
-    req.user = user;
+    req.user = userFound;
     next();
 };
 
 module.exports = verifyJWT;
+// const authHeader = req.headers.authorization || req.headers.Authorization
+// const jwtToken = authHeader.split(' ')[1]
+// || !authHeader.startsWith('Bearer')
 
 // const jwt = require('jsonwebtoken')
 // require('dotenv').config()
