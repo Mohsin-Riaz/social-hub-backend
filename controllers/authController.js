@@ -73,7 +73,7 @@ const loginGoogle = async (req, res) => {
     );
     res.clearCookie('jwt');
     res.cookie('jwt', cookieObject, {
-        httpOnly: false, //Access by browser only
+        httpOnly: true, //Access by browser only
         secure: true, //https
         sameSite: 'None', //cross-site cookie
         // sameSite: 'Lax', //cross-site cookie
