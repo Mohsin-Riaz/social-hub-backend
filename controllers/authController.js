@@ -52,6 +52,7 @@ const login = async (req, res) => {
 
 const loginGoogleJwt = async (req, res) => {
     const { googleJWT } = req.body;
+    console.log(googleJWT);
     if (!googleJWT)
         return res
             .status(404)
