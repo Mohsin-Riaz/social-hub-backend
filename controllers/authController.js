@@ -129,9 +129,7 @@ const loginGoogle = async (req, res) => {
         //domain: '.app.localhost:3000',
     });
 
-    return res.redirect(
-        `${process.env.FRONTEND_URL}google?jwt=${cookieObject}`
-    );
+    return res.redirect(`${process.env.FRONTEND_URL}?jwt=${cookieObject}`);
 };
 
 const logout = async (req, res) => {
