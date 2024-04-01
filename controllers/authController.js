@@ -4,9 +4,9 @@ const jwt = require('jsonwebtoken');
 const People = require('../models/peopleModel');
 
 const login = async (req, res) => {
-    var { email, password, issuer } = req.body.newPeopleData || req.body;
+    const { email, password } = req.body.newPeopleData || req.body;
 
-    if (!email || !password || issuer !== 'google')
+    if (!email || !password)
         return res
             .status(404)
             .json({ success: false, message: `no email/password provided` });
@@ -51,13 +51,13 @@ const login = async (req, res) => {
 };
 
 const loginGoogleJwt = async (req, res) => {
-    const { jwt } = req.body;
-    if (!jwt)
+    const { googleJWT } = req.body;
+    if (!googleJWT)
         return res
             .status(404)
             .json({ success: false, message: `no jwt provided` });
 
-    const verifiedGoogle = jwt.verify(jwt, 'secret');
+    const verifiedGoogle = jwt.verify(googleJWT, 'secret');
 
     if (!verifiedGoogle)
         return res
@@ -69,7 +69,6 @@ const loginGoogleJwt = async (req, res) => {
         return res
             .status(404)
             .json({ success: false, message: `person does not exist` });
-
     const cookieObject = jwt.sign(
         {
             peopleId: personFound.peopleId,
