@@ -4,9 +4,9 @@ const jwt = require('jsonwebtoken');
 const People = require('../models/peopleModel');
 
 const login = async (req, res) => {
-    const { email, password } = req.body.newPeopleData || req.body;
+    var { email, password, issuer } = req.body.newPeopleData || req.body;
 
-    if (!email || !password)
+    if (!email || !password || issuer !== 'google')
         return res
             .status(404)
             .json({ success: false, message: `no email/password provided` });
@@ -22,6 +22,53 @@ const login = async (req, res) => {
         return res
             .status(403)
             .json({ success: false, message: `Not authenticated` });
+
+    const cookieObject = jwt.sign(
+        {
+            peopleId: personFound.peopleId,
+            email: personFound.email,
+        },
+        'secret'
+    );
+    res.clearCookie('jwt');
+    res.cookie('jwt', cookieObject, {
+        httpOnly: true, //Access by browser only
+        secure: true, //https
+        sameSite: 'None', //cross-site cookie
+        // sameSite: 'Lax', //cross-site cookie
+        maxAge: 7 * 24 * 60 * 60 * 1000, //7 days
+        path: '/', //    '/social-hub-frontend'
+        //domain: '.app.localhost:3000',
+    });
+
+    return res.status(200).json({
+        success: true,
+        message: 'Person logged in',
+        data: { peopleId: personFound.peopleId },
+        // cookieObject: cookieObject,
+    });
+    // return res.redirect(process.env.FRONTEND_URL);
+};
+
+const loginGoogleJwt = async (req, res) => {
+    const { jwt } = req.body;
+    if (!jwt)
+        return res
+            .status(404)
+            .json({ success: false, message: `no jwt provided` });
+
+    const verifiedGoogle = jwt.verify(jwt, 'secret');
+
+    if (!verifiedGoogle)
+        return res
+            .status(403)
+            .json({ success: false, message: `Unauthorized` });
+
+    const personFound = await People.findOne({ email: verifiedGoogle.email });
+    if (!personFound)
+        return res
+            .status(404)
+            .json({ success: false, message: `person does not exist` });
 
     const cookieObject = jwt.sign(
         {
@@ -82,7 +129,9 @@ const loginGoogle = async (req, res) => {
         //domain: '.app.localhost:3000',
     });
 
-    return res.redirect(`${process.env.FRONTEND_URL}?jwt=${cookieObject}`);
+    return res.redirect(
+        `${process.env.FRONTEND_URL}google?jwt=${cookieObject}`
+    );
 };
 
 const logout = async (req, res) => {
@@ -107,4 +156,4 @@ const refreshJwt = async (req, res) => {
     });
 };
 
-module.exports = { login, loginGoogle, logout, refreshJwt };
+module.exports = { login, loginGoogle, logout, refreshJwt, loginGoogleJwt };
