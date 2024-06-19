@@ -60,12 +60,16 @@ const createPeople = async (req, res, next) => {
         var hashedPassword = await bcrypt.hash(newPeopleData.password, 10);
     }
 
+    if (newPeopleData.avatar !== 'default')
+        newPeopleData.avatar = process.env.AWS_S3_URL + peopleId;
+    else newPeopleData.avatar = null;
+
     const peopleId = crypto.randomUUID();
     const newPerson = await People.create({
         ...newPeopleData,
         peopleId: peopleId,
         password: hashedPassword,
-        avatar: process.env.IMAGE_BACKEND_URL + peopleId,
+        // avatar:  process.env.AWS_S3_URL + peopleId,
     });
     const personCreated = await newPerson.save();
 
