@@ -62,7 +62,7 @@ const createPeople = async (req, res, next) => {
 
     if (newPeopleData.avatar !== 'default')
         newPeopleData.avatar = process.env.AWS_S3_URL + peopleId;
-    else newPeopleData.avatar = null;
+    else newPeopleData.avatar = undefined;
 
     const peopleId = crypto.randomUUID();
     const newPerson = await People.create({
